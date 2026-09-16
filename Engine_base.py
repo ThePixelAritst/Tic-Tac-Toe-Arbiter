@@ -1,6 +1,6 @@
 from multiprocessing import Process as mppr
 import multiprocessing.connection as mpcon
-import time
+import asyncio
 
 class Arbiter_communication:
 
@@ -50,6 +50,9 @@ class Engine_handler:
         self.arbiter_conn, self.engine_conn = mpcon.Pipe()
         self.eng = mppr(target=engine,args=(self.engine_conn))
         self.eng.start()
+
+    async def _receive_ready(self):
+        await 
 
     def _receive_data(self,watchdog=2.5):
         received = mpcon.wait([self.arbiter_conn],watchdog)
