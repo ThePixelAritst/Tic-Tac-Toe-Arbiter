@@ -6,14 +6,23 @@ class Arbiter_communication:
     def main_loop(self): # main loop in which the actual engine classes and functions are called
         pass
 
+    def define_translation_dictionary(self):
+        self._define_arbiter_translator()
+        self.translate_receive_type = {
+                    "MOVE": (NotImplemented,int),
+                    "PONDER" : (NotImplemented,int),
+                    "SETTINGS" : (NotImplemented,int),
+                    "ARBITER" : (NotImplemented,int)
+                    }
+
 
     def receive_arbiter_instruction(self):
         request = self.pipe.recv() # blocking instruction - waits for data from Arbiter
-        print("Stink")
-        if request is type(None): # signal to break the connection
-            self.pipe.close()
-        elif request is None:
-            self.send_to_arbiter(())
+        if self._check_receive_validity(request):
+            return request
+        else:
+            self.send_to_arbiter(("ARBITER","INVALID_REQUEST",request))
+        
 
     def send_to_arbiter(self,data_to_send): #sends the inputed data packet to Arbiter through pipe
         if not data_to_send:
@@ -21,25 +30,43 @@ class Arbiter_communication:
         self.pipe.send(data_to_send)
 
     # Interal back-end functions and workings, you likely wont need these :D
+    # NOTE: YOUR ENGINE WILL LIKELY NOT PASS HANDSHAKE IF YOU TOUCH THESE!
 
-    def __init__(self,pipe_conn):
-            self.handshake_done = False
+    def _define_arbiter_translator(self):
+        self._arbiter_translation = {}
+
+
+    def __init__(self,pipe_conn: mpcon.Connection):
+            self.done_handshake = False
             self.pipe = pipe_conn
-            self._communication_dict_initiation()
-            self.send_to_arbiter(("INITIAL","start"))
-            self._arbiter_handshake()
+            self.define_translation_dictionary()     
+            self._handshake()
 
-    def _arbiter_handshake(self):
-        while not self.handshake_done:
-            pass
+    def _handshake(self):
+        self.send_to_arbiter(("INITIAL","start"))
+        
+        self.done_handshake = True
 
-    def _communication_dict_initiation(self):
-        self.receive_type_translate = {
-                    "FUNCTION": self.function_list,
-                    "INITIAL" : self.handshake_functions
-                    }
-        self.handshake_functions = {}
-        self.function_list = {}
+
+    def _check_receive_validity(self,input_data):
+        if input_data is type(None):
+            self.send_to_arbiter(("ARBITER","PIPE_CLOSED"))
+            self.pipe.close()
+
+        if not self.done_handshake:
+            return True
+        elif input_data[0] is "ARBITER":
+            argument_length = len(input_data)-2
+            requested_function = self._arbiter_translation.get(input_data[1],KeyError)
+        else:
+            requested_function = self.translate_receive_type.get(input_data[0],KeyError)
+            argument_length = len(input_data)-1
+
+        if requested_function is not KeyError and argument_length == requested_function[1]:
+            return True
+        else:
+            return False
+
 
 
 
@@ -67,6 +94,7 @@ class Engine_handler:
             elif retry_counter > 5:
                 raise RuntimeError("Connection to engine could not be established")
             retry_counter += 1
+
 
         
 
@@ -96,6 +124,7 @@ class Engine_handler:
 
     def _terminate(self):
         self.eng.terminate()
+        print(f"Engine {self.identificator} process forcefully terminated")
 
 
 
