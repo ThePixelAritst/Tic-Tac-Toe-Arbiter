@@ -1,6 +1,5 @@
 from multiprocessing import Process as mppr
 import multiprocessing.connection as mpcon
-import asyncio
 
 class Arbiter_communication:
 
@@ -24,12 +23,15 @@ class Arbiter_communication:
     # Interal back-end functions and workings, you likely wont need these :D
 
     def __init__(self,pipe_conn):
+            self.handshake_done = False
             self.pipe = pipe_conn
             self._communication_dict_initiation()
             self.send_to_arbiter(("INITIAL","start"))
+            self._arbiter_handshake()
 
     def _arbiter_handshake(self):
-        pass
+        while not self.handshake_done:
+            pass
 
     def _communication_dict_initiation(self):
         self.receive_type_translate = {
@@ -50,9 +52,32 @@ class Engine_handler:
         self.arbiter_conn, self.engine_conn = mpcon.Pipe()
         self.eng = mppr(target=engine,args=(self.engine_conn))
         self.eng.start()
+        try:
+            self._communication_handshake()
+        except RuntimeError:
+            pass
 
-    async def _receive_ready(self):
-        await 
+        
+
+    def _communication_handshake(self):
+        retry_counter = 0
+        while True:
+            if self._receive_data(2) is ("INITIAL","start"):
+                break
+            elif retry_counter > 5:
+                raise RuntimeError("Connection to engine could not be established")
+            retry_counter += 1
+
+        
+
+        
+
+    def _define_dictionaries(self):
+        self.handshake_dict = {}
+            
+        
+
+
 
     def _receive_data(self,watchdog=2.5):
         received = mpcon.wait([self.arbiter_conn],watchdog)
