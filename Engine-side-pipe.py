@@ -2,50 +2,46 @@ from multiprocessing import Process as mppr
 import multiprocessing.connection as mpcon
 
 class Arbiter_communication:
+    # IMPORTANT NOTE: YOUR ENGINE WILL NOT EVEN START IF YOU TOUCH ANYTHING IN HERE!
 
-    def main_loop(self): # main loop in which the actual engine classes and functions are called
-        pass
-
-    def define_translation_dictionary(self):
-        self._define_arbiter_translator()
-        self.translate_receive_type = {
-                    "MOVE": (NotImplemented,int),
-                    "PONDER" : (NotImplemented,int),
-                    "SETTINGS" : (NotImplemented,int),
-                    "ARBITER" : (NotImplemented,int)
-                    }
-
+    # Public-facing functions, which you can (and need) to use in order to communicate with the Arbiter
 
     def receive_arbiter_instruction(self):
         request = self.pipe.recv() # blocking instruction - waits for data from Arbiter
         if self._check_receive_validity(request):
             return request
         else:
-            self.send_to_arbiter(("ARBITER","INVALID_REQUEST",request))
-        
+            raise ValueError("Invalid request received, resending")
+            
 
     def send_to_arbiter(self,data_to_send): #sends the inputed data packet to Arbiter through pipe
         if not data_to_send:
-            raise ValueError("SEND ERROR: Cannot send empty packet to arbiter!")
+            raise ValueError("Empty packet cannot be sent to Arbiter!")
         self.pipe.send(data_to_send)
 
     # Interal back-end functions and workings, you likely wont need these :D
-    # NOTE: YOUR ENGINE WILL LIKELY NOT PASS HANDSHAKE IF YOU TOUCH THESE!
-
-    def _define_arbiter_translator(self):
-        self._arbiter_translation = {}
-
 
     def __init__(self,pipe_conn: mpcon.Connection):
             self.done_handshake = False
             self.pipe = pipe_conn
-            self.define_translation_dictionary()     
-            self._handshake()
+            self._define_translation_dictionary()     
+            self.send_to_arbiter(("INITIAL","READY"))
 
     def _handshake(self):
-        self.send_to_arbiter(("INITIAL","start"))
+        while not self.done_handshake:
+            instruction = self.receive_arbiter_instruction()
+
+
+    def _define_translation_dictionary(self):
+        self.arbiter_translation = {
+            "HANDSHAKE":(self._handshake(),0)
+            }
         
-        self.done_handshake = True
+        self.translate_receive_type = {
+            "MOVE": int,
+            "PONDER" : int,
+            "SETTINGS" : int,
+            }
 
 
     def _check_receive_validity(self,input_data):
@@ -57,7 +53,7 @@ class Arbiter_communication:
             return True
         elif input_data[0] is "ARBITER":
             argument_length = len(input_data)-2
-            requested_function = self._arbiter_translation.get(input_data[1],KeyError)
+            requested_function = self.arbiter_translation.get(input_data[1],KeyError)
         else:
             requested_function = self.translate_receive_type.get(input_data[0],KeyError)
             argument_length = len(input_data)-1
@@ -65,6 +61,7 @@ class Arbiter_communication:
         if requested_function is not KeyError and argument_length == requested_function[1]:
             return True
         else:
+            self.send_to_arbiter(("ARBITER","INVALID_REQUEST",input_data))
             return False
 
 
