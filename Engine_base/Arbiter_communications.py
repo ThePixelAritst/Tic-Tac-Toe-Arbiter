@@ -79,7 +79,8 @@ class Arbiter_communication:
         elif valid:
             return received_data 
         else:
-            raise ValueError("Invalid request received")
+            self.send_to_arbiter(("ARBITER","FUNCTION_INVALID",(received_data)))
+            return None
 
     def __close_pipe(self):
         self.send_to_arbiter(("ARBITER","PIPE_CLOSED",()))

@@ -4,31 +4,24 @@ import hashlib
 import psutil
 
 class Engine_handler:
-    def __init__(self,engine,engine_identificator,cpu_affinity,max_memory):
+    def __init__(self,engine_folder_path, engine_identificator, cpu_affinity:tuple, max_memory:int):
         self.identificator = engine_identificator
+
+        if self._verify_comms_file():
+            self.engine.start()
+        else:
+            raise ImportError("Incorrect or tampered communications file")
+
         self.arbiter_conn, self.engine_conn = mpcon.Pipe()
-        self.engine = Process(target=engine,args=(self.engine_conn))
-        self.engine.start()
+        self.engine = Process(target=engine_folder_path,args=(self.engine_conn))
         self.process = psutil.Process(self.engine.pid)
-
-        try:
-            self._communication_handshake()
-        except RuntimeError:
-            pass
-
-        
-
-    def _communication_handshake(self):
-        retry_counter = 0
-        while True:
-            if self._receive_data(2) is ("INITIAL","start"):
-                break
-            elif retry_counter > 5:
-                raise RuntimeError("Connection to engine could not be established")
-            retry_counter += 1
+        self.process.cpu_affinity(cpu_affinity)
+        self.process.memory_percent()
 
 
-        
+
+    def _verify_comms_file():
+        pass
 
         
 
