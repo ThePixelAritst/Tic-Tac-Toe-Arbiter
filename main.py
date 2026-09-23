@@ -1,4 +1,4 @@
-#import Engine_handler
+from Engine_handler import Engine_handler
 import Resources.program_settings as set
 import os
 
@@ -9,36 +9,35 @@ class Engine_instance_managment:
     def __init__(self): #makes a list of all avaliable engines
         os.chdir(r"D:\Coding adventures\Tic Tac Arbiter\Engines") #set this to set.Engine_folder when you are done with testing
         
-        self.engine_list = []
+        self.engine_dict = {}
         self._calculate_engine_list()
 
     def _calculate_engine_list(self):
-        Folder_scan = os.scandir()
-        for engine in Folder_scan:
-                    if engine.is_dir() and "engine" in engine.name.casefold():
-                        self.engine_list.append(engine.path)
+        _folder_scan = os.scandir()
+        engine_id = 0
+        for engine in _folder_scan:
+            if engine.is_dir() and "engine" in engine.name.casefold():
+                self.engine_dict.update({engine_id : (engine.name,engine.path)})
+            engine_id += 1
 
-    def get_engine_path(self,engine_id):
-        if engine_id >= len(self.engine_list):
-            return None
+    def get_data(self,engine_id:int):
+        """
+        Returned value: (engine_name,engine_path)
+        """ 
+        returned_value = self.engine_dict.get(engine_id,Exception)
+        if returned_value == Exception:
+            raise KeyError("Requested key does not exist")
         else:
-            return self.engine_list[engine_id]
+            return returned_value
 
 
-"""if __name__ == "__main__":
-    Engine_1 = Engine_handler.Engine_handler(NotImplemented,1)
-    print("stink")
-    Engine_1 = Engine_handler.Engine_handler(NotImplemented,2)
+engines = Engine_instance_managment()
 
-    print("sending test move")
-    test_move = Engine_1.move()
-    print(f"received test move, data {test_move}")
-    if not test_move:
-        print("Not valid")
-        Engine_1._terminate()
-        Engine_2._terminate()
-    else: 
-        Engine_1._close()
-        Engine_2._close()
-        print(test_move)
-"""
+def engine_instance_start(engine_id):
+    instance_data = engines.get_data(engine_id)
+    return Engine_handler(instance_data[1],instance_data[0],(0,1))
+
+engine_instance_start(0)
+engine_instance_start(1)
+
+Engine_handler()

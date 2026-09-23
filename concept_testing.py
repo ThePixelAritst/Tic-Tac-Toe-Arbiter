@@ -1,14 +1,12 @@
-import hashlib
+import os
+import Resources.program_settings as set
 
-with open(r"D:\Coding adventures\Tic Tac Arbiter\Engine_base\Engine_communications.py", "rb") as file_1:
-    digest_file_1 = hashlib.file_digest(file_1, "sha256")
-    digested_1 = digest_file_1.hexdigest()
+os.chdir(r"D:\Coding adventures\Tic Tac Arbiter\Engines")
+Folder_scan = os.scandir()
+Engine_list = []
+for engine in Folder_scan:
+    if engine.is_dir() and "Engine" in engine.name:
+        print(f"Engine {engine.name} is avaliable")
+        Engine_list.append(engine.path)
 
-with open(r"D:\Coding adventures\Tic Tac Arbiter\Resources\engine_comms.py", "rb") as file_2:
-    digest_file_2 = hashlib.file_digest(file_2, "sha256")
-    digested_2 = digest_file_2.hexdigest()
-
-if digested_1 == digested_2:
-    print("same")
-else:
-    print("different")
+print(Engine_list)

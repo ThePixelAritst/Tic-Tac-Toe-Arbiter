@@ -6,7 +6,10 @@ import os
 
 import Resources.program_settings as set
 
-class Engine_handler:
+class Data_receive:
+    pass
+
+class Engine_handler(Data_receive):
     def __init__(self,engine_folder_path, engine_identificator, cpu_affinity:tuple):
         self.identificator = engine_identificator
 
@@ -67,5 +70,3 @@ class Engine_handler:
     def _terminate(self):
         self.engine.terminate()
         print(f"Engine {self.identificator} process forcefully terminated")
-
-test = Engine_handler((),1,(0,1),0)
