@@ -13,6 +13,8 @@ class Main_Engine:
     def main_loop(self):
         while True:
             request = self.comms.receive_arbiter_instruction()
+            if not request:
+                 continue
             instruction = self.translate.get(request[0])
             reply = instruction(request[1])
             self.comms.send_to_arbiter(request[0],reply)
@@ -22,4 +24,4 @@ class Main_Engine:
         NotImplemented
 
     def ponder(self):
-            NotImplemented
+        NotImplemented
