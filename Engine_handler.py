@@ -7,21 +7,19 @@ import os
 import Resources.program_settings as set
 
 class Engine_handler:
-    def __init__(self,engine_folder_path, engine_identificator, cpu_affinity:tuple, max_memory:int):
+    def __init__(self,engine_folder_path, engine_identificator, cpu_affinity:tuple):
         self.identificator = engine_identificator
 
-
-
         if self._verify_comms_file():
-            #self.engine.start()
+            self.engine.start()
             pass
         else:
             raise ImportError("Incorrect or tampered communications file")
 
-        #self.arbiter_conn, self.engine_conn = mpcon.Pipe()
-        #self.engine = Process(target=engine_folder_path,args=(self.engine_conn))
-        #self.process = psutil.Process(self.engine.pid)
-        #self.process.cpu_affinity(cpu_affinity)
+        self.arbiter_conn, self.engine_conn = mpcon.Pipe()
+        self.engine = Process(target=engine_folder_path,args=(self.engine_conn))
+        self.process = psutil.Process(self.engine.pid)
+        self.process.cpu_affinity(cpu_affinity)
 
 
 
@@ -33,10 +31,14 @@ class Engine_handler:
                 digested_engine_file = hashlib.file_digest(engine_file, "sha256")
                 digested_engine = digested_engine_file.hexdigest()
             with open(r"C:\Users\pixel\Documents\Coding\Tic-Tac-Arbiter\Engine_base\Arbiter_communications.py", "rb") as engine_file:
-                digested_ = hashlib.file_digest(engine_file, "sha256")
-                digested_engine = digested_engine_file.hexdigest()
+                digested_arbiter = hashlib.file_digest(engine_file, "sha256")
+                digested_arbiter = digested_engine_file.hexdigest()
+
+            if digested_arbiter == digested_engine:
+                return True
         else:
             return False
+
 
         
 
