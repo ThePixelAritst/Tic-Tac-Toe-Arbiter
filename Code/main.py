@@ -1,9 +1,9 @@
 import sys
 import os
-sys.path.insert(0,str(os.getcwd()))
+sys.path.insert(0,str(os.getcwd())) # sets the sys.path so absolute importing paths like actually work (sets it to Tic_Tac_Arbiter)
 
 from Code.Engine_handler import Engine_handler
-from Resources import program_settings
+from Resources import program_settings as set
 
 
 
@@ -11,18 +11,16 @@ from Resources import program_settings
 
 class Engine_instance_managment:
     def __init__(self): #makes a list of all avaliable engines
-        current_folder = os.scandir()
-        for item in current_folder:
-            if item.name == "Engines":
-                os.chdir(os.path.join(os.getcwd(),item.name))
-                print(os.getcwd())
-        
+        self.path = os.path.join(os.getcwd(),set.Engine_folder_name)
+        if not os.path.isdir(self.path):
+            raise ImportError(f"Directory 'Engines' could not be result {os.getcwd()}. Set chdir to Tic_Tac_Arbiter directory!")
+
         self.engine_dict = {}
         self._calculate_engine_list()
         print(self.engine_dict)
 
     def _calculate_engine_list(self):
-        _folder_scan = os.scandir()
+        _folder_scan = os.scandir(self.path)
         engine_id = 0
         for engine in _folder_scan:
             if engine.is_dir() and "engine" in engine.name.casefold():
@@ -43,7 +41,7 @@ engines = Engine_instance_managment()
 
 def engine_instance_start(engine_id):
     instance_data = engines.get_data(engine_id)
-    return Engine_handler(os.path.join(os.getcwd(),instance_data[1]),instance_data[0],(0,1))
+    return Engine_handler(os.path.join(engines.path,instance_data[1]),instance_data[0],(0,1))
 
 engine_instance_start(0)
 engine_instance_start(1)

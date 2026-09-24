@@ -1,1 +1,1 @@
-Engine_folder = r"C:\Users\pixel\Documents\Coding\Tic-Tac-Arbiter\Engine_base"
+Engine_folder_name = "Engines"
