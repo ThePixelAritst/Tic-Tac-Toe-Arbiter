@@ -1,16 +1,25 @@
-from Engine_handler import Engine_handler
-import Resources.program_settings as set
+import sys
 import os
+sys.path.insert(0,str(os.getcwd()))
+
+from Code.Engine_handler import Engine_handler
+from Resources import program_settings
+
 
 
 
 
 class Engine_instance_managment:
     def __init__(self): #makes a list of all avaliable engines
-        os.chdir(r"C:\Users\pixel\Documents\Coding\Tic-Tac-Arbiter\Engines") #set this to set.Engine_folder when you are done with testing
+        current_folder = os.scandir()
+        for item in current_folder:
+            if item.name == "Engines":
+                os.chdir(os.path.join(os.getcwd(),item.name))
+                print(os.getcwd())
         
         self.engine_dict = {}
         self._calculate_engine_list()
+        print(self.engine_dict)
 
     def _calculate_engine_list(self):
         _folder_scan = os.scandir()
@@ -34,7 +43,7 @@ engines = Engine_instance_managment()
 
 def engine_instance_start(engine_id):
     instance_data = engines.get_data(engine_id)
-    return Engine_handler(os.path.join(os.getcwdb,instance_data[1]),instance_data[0],(0,1))
+    return Engine_handler(os.path.join(os.getcwd(),instance_data[1]),instance_data[0],(0,1))
 
 engine_instance_start(0)
 engine_instance_start(1)
