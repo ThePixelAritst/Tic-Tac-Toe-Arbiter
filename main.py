@@ -7,7 +7,7 @@ import os
 
 class Engine_instance_managment:
     def __init__(self): #makes a list of all avaliable engines
-        os.chdir(r"D:\Coding adventures\Tic Tac Arbiter\Engines") #set this to set.Engine_folder when you are done with testing
+        os.chdir(r"C:\Users\pixel\Documents\Coding\Tic-Tac-Arbiter\Engines") #set this to set.Engine_folder when you are done with testing
         
         self.engine_dict = {}
         self._calculate_engine_list()
@@ -30,12 +30,11 @@ class Engine_instance_managment:
         else:
             return returned_value
 
-
 engines = Engine_instance_managment()
 
 def engine_instance_start(engine_id):
     instance_data = engines.get_data(engine_id)
-    return Engine_handler(instance_data[1],instance_data[0],(0,1))
+    return Engine_handler(os.path.join(os.getcwdb,instance_data[1]),instance_data[0],(0,1))
 
 engine_instance_start(0)
 engine_instance_start(1)

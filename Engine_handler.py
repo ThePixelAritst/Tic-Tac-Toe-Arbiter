@@ -10,8 +10,12 @@ class Data_receive:
     pass
 
 class Engine_handler(Data_receive):
-    def __init__(self,engine_folder_path, engine_identificator, cpu_affinity:tuple):
+    def __init__(self,engine_directory, engine_identificator, cpu_affinity:tuple):
         self.identificator = engine_identificator
+
+        if os.path.isdir(engine_directory):
+            pass
+
 
         if self._verify_comms_file():
             self.engine.start()
@@ -20,7 +24,7 @@ class Engine_handler(Data_receive):
             raise ImportError("Incorrect or tampered communications file")
 
         self.arbiter_conn, self.engine_conn = mpcon.Pipe()
-        self.engine = Process(target=engine_folder_path,args=(self.engine_conn))
+        self.engine = Process(target=engine_directory,args=(self.engine_conn))
         self.process = psutil.Process(self.engine.pid)
         self.process.cpu_affinity(cpu_affinity)
 
