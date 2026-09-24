@@ -3,8 +3,7 @@ import multiprocessing.connection as mpcon
 import hashlib
 import psutil
 import os
-
-import Resources.program_settings as set
+import sys
 
 class Data_receive:
     pass
