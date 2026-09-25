@@ -1,31 +1,44 @@
+# fuck me this is the most complicated shit i've written in my entire fucking life
+
 from multiprocessing import Process
 import multiprocessing.connection as mpcon
 import hashlib
 import psutil
 import os
-
+import importlib.util
+import inspect
+import sys
 import Resources.program_settings as set
 
 class Data_receive:
-    pass
+    def test(self):
+        pass
+
 
 class Engine_handler(Data_receive):
     def __init__(self,engine_directory, engine_identificator, cpu_affinity:tuple):
         self.identificator = engine_identificator
 
-        if not os.path.isdir(self.path): # checks if provided engine directory exists
+        if not os.path.isdir(engine_directory): # checks if provided engine directory exists
             raise ValueError("The engine directory could not be found")
+        else:
+            self.path = engine_directory
         try: self._verify_comms_file()
         except Exception as error: raise error 
-        self.path = engine_directory
+        
         self.path_main_file = os.path.join(self.path,"Engine_main.py") #path of the script which will be launched
         if not os.path.isfile(self.path_main_file): #checks if the path is valid and a file
             raise ImportError(f"{set.ENGINE_MAINFILE} file does not exist or could not be found")
+        
+        #self.handle_data = Data_receive()
 
         self.arbiter_conn, self.engine_conn = mpcon.Pipe()
-        self.engine = Process(target=self.path_main_file,args=(self.engine_conn))
+        self._launch_engine_instance(self.engine_conn,self.identificator,self.path_main_file)
+        self.engine = Process(target=self._launch_engine_instance,args=(self.engine_conn,self.identificator,self.path_main_file))
         self.process = psutil.Process(self.engine.pid)
         self.process.cpu_affinity(cpu_affinity)
+        #self.engine.start()
+
 
     def _verify_comms_file(self):
         comms_address = os.path.join(self.path,set.COMMS_FILENAME)
@@ -46,7 +59,30 @@ class Engine_handler(Data_receive):
         else:
             raise FileNotFoundError(f"{set.COMMS_FILENAME} does not exist or could not be found")
 
-    def start_resume_engine(self):
+
+    def _load_top_engine_class(self,identification,path_to_main):
+        Engine_spec = importlib.util.spec_from_file_location(identification,path_to_main)
+        module = importlib.util.module_from_spec(Engine_spec)
+        Engine_spec.loader.exec_module(module)
+        return module
+
+    def _launch_engine_instance(self,pipe_connection,identification,path_to_main):
+        sys.path.insert(0,str(self.path))
+        module = self._load_top_engine_class(identification,path_to_main)
+        avaliable_classes = inspect.getmembers(module)
+        main_engine_class = None
+        for name,object_type in avaliable_classes:
+            if inspect.isclass(object_type):
+                class_name = name.casefold()
+                if class_name.find("engine") and class_name.find("main"):
+                    if not main_engine_class:
+                        main_engine_class = class_name
+                    else:
+                        raise ImportError(f"{set.ENGINE_MAINFILE} contains multiple instances of classes with 'engine' and 'main' in its name")
+
+        engine_instance = module.main_engine_class(pipe_connection)
+        engine_instance.run()
+
 
 
     def _receive_data(self,watchdog=2.5):

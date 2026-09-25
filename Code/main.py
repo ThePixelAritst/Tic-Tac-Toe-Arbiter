@@ -7,7 +7,7 @@ from Code.Engine_handler import Engine_handler
 from Resources import program_settings as set
 
 
-class Engine_instance_managment:
+class Engine_instance_management:
     def __init__(self): #makes a list of all avaliable engines
         self.path = os.path.join(os.getcwd(),set.ENGINE_FOLDERNAME)
         if not os.path.isdir(self.path):
@@ -15,7 +15,6 @@ class Engine_instance_managment:
 
         self.engine_dict = {}
         self._calculate_engine_list()
-        print(self.engine_dict)
 
     def _calculate_engine_list(self):
         _folder_scan = os.scandir(self.path)
@@ -35,13 +34,11 @@ class Engine_instance_managment:
         else:
             return returned_value
 
-engines = Engine_instance_managment()
+engines = Engine_instance_management()
 
 def engine_instance_start(engine_id):
     instance_data = engines.get_data(engine_id)
     return Engine_handler(os.path.join(engines.path,instance_data[1]),instance_data[0],(0,1))
 
-engine_instance_start(0)
-engine_instance_start(1)
-
-Engine_handler()
+if __name__ == "__main__":
+    engine_instance_start(0)
