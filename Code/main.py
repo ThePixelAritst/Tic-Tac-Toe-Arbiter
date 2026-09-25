@@ -2,11 +2,9 @@ import sys
 import os
 sys.path.insert(0,str(os.getcwd())) # sets the sys.path so absolute importing paths like actually work (sets it to Tic_Tac_Arbiter)
 
+# absolute path imports which need the inserted sys.path to be imported from parent folder, not /Code folder
 from Code.Engine_handler import Engine_handler
 from Resources import program_settings as set
-
-
-
 
 
 class Engine_instance_managment:

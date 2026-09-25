@@ -3,7 +3,7 @@ import multiprocessing.connection as mpcon
 import hashlib
 import psutil
 import os
-import sys
+
 
 class Data_receive:
     pass
@@ -12,26 +12,25 @@ class Engine_handler(Data_receive):
     def __init__(self,engine_directory, engine_identificator, cpu_affinity:tuple):
         self.identificator = engine_identificator
 
-        if os.path.isdir(engine_directory):
-            pass
-
-
-        if self._verify_comms_file():
-            self.engine.start()
-            pass
-        else:
-            raise ImportError("Incorrect or tampered communications file")
+        if not os.path.isdir(self.path): # checks if provided engine directory exists
+            raise ValueError("The engine directory could not be found")
+        try: self._verify_comms_file()
+        except Exception as error: raise error 
+        self.path = engine_directory
+        self.path_main_file = os.path.join(self.path,"main.py") #path of the script which will be launched
+        if not os.path.isfile(self.path_main_file): #checks if the path is valid and a file
+            raise ImportError("main.py file does not exist or could not be found")
+        os.chdir(self.path)
 
         self.arbiter_conn, self.engine_conn = mpcon.Pipe()
-        self.engine = Process(target=engine_directory,args=(self.engine_conn))
+        self.engine = Process(target=self.path_main_file,args=(self.engine_conn))
         self.process = psutil.Process(self.engine.pid)
         self.process.cpu_affinity(cpu_affinity)
 
 
 
     def _verify_comms_file(self):
-        comms_address = os.path.join(set.Engine_folder,"Arbiter_communications.py")
-        print("stink")
+        comms_address = os.path.join(self.path,"Arbiter_communications.py")
         if os.path.exists(comms_address) and os.path.isfile(comms_address):
             with open(comms_address, "rb") as engine_file:
                 digested_engine_file = hashlib.file_digest(engine_file, "sha256")
