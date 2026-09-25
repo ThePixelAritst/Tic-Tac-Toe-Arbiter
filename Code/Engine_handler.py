@@ -4,6 +4,7 @@ import hashlib
 import psutil
 import os
 
+import Resources.program_settings as set
 
 class Data_receive:
     pass
@@ -17,41 +18,35 @@ class Engine_handler(Data_receive):
         try: self._verify_comms_file()
         except Exception as error: raise error 
         self.path = engine_directory
-        self.path_main_file = os.path.join(self.path,"main.py") #path of the script which will be launched
+        self.path_main_file = os.path.join(self.path,"Engine_main.py") #path of the script which will be launched
         if not os.path.isfile(self.path_main_file): #checks if the path is valid and a file
-            raise ImportError("main.py file does not exist or could not be found")
-        os.chdir(self.path)
+            raise ImportError(f"{set.ENGINE_MAINFILE} file does not exist or could not be found")
 
         self.arbiter_conn, self.engine_conn = mpcon.Pipe()
         self.engine = Process(target=self.path_main_file,args=(self.engine_conn))
         self.process = psutil.Process(self.engine.pid)
         self.process.cpu_affinity(cpu_affinity)
 
-
-
     def _verify_comms_file(self):
-        comms_address = os.path.join(self.path,"Arbiter_communications.py")
-        if os.path.exists(comms_address) and os.path.isfile(comms_address):
+        comms_address = os.path.join(self.path,set.COMMS_FILENAME)
+        if os.path.isfile(comms_address):
             with open(comms_address, "rb") as engine_file:
                 digested_engine_file = hashlib.file_digest(engine_file, "sha256")
                 digested_engine = digested_engine_file.hexdigest()
-            with open(r"C:\Users\pixel\Documents\Coding\Tic-Tac-Arbiter\Engine_base\Arbiter_communications.py", "rb") as engine_file:
-                digested_arbiter = hashlib.file_digest(engine_file, "sha256")
+            with open(os.path.join(os.getcwd(),"Engine_base",set.COMMS_FILENAME), "rb") as engine_base_file:
+                digested_arbiter = hashlib.file_digest(engine_base_file, "sha256")
                 digested_arbiter = digested_engine_file.hexdigest()
 
             if digested_arbiter == digested_engine:
+                engine_file.close()
+                engine_base_file.close()
                 return True
+            else:
+                raise ImportError(f"Verification {set.COMMS_FILENAME} file does not match with one found in Engine folder")
         else:
-            return False
+            raise FileNotFoundError(f"{set.COMMS_FILENAME} does not exist or could not be found")
 
-
-        
-
-    def _define_dictionaries(self):
-        self.handshake_dict = {}
-            
-        
-
+    def start_resume_engine(self):
 
 
     def _receive_data(self,watchdog=2.5):

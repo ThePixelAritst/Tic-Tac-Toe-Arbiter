@@ -9,7 +9,7 @@ from Resources import program_settings as set
 
 class Engine_instance_managment:
     def __init__(self): #makes a list of all avaliable engines
-        self.path = os.path.join(os.getcwd(),set.Engine_folder_name)
+        self.path = os.path.join(os.getcwd(),set.ENGINE_FOLDERNAME)
         if not os.path.isdir(self.path):
             raise ImportError(f"Directory 'Engines' could not be result {os.getcwd()}. Set chdir to Tic_Tac_Arbiter directory!")
 
